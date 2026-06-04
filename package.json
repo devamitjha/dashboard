@@ -6,8 +6,8 @@
     "scripts": {
         "lint": "next lint",
         "build": "next build",
-        "dev": "next dev -p 3010",
-        "start": "next start -p 3010"
+        "dev": "next dev -p 3020",
+        "start": "next start -p 3020"
     },
     "keywords": [],
     "author": "",
