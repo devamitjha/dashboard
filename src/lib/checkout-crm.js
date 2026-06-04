@@ -71,7 +71,7 @@ export const sendCheckoutCrmEvent = async (type, data) => {
     }
 
     const products = (data.cartItems || []).map(item => {
-      const origin = typeof window !== 'undefined' ? window.location.origin : "https://www.lucira.in";
+      const origin = typeof window !== 'undefined' ? window.location.origin : "https://www.lucirajewelry.com/";
       const handle = item.handle || item.productHandle || item.product_handle;
       const productUrl = handle ? `${origin}/products/${handle}${item.variantId ? `?variant=${item.variantId}` : ""}` : "";
 
