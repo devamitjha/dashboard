@@ -1,0 +1,101 @@
+'use client';
+
+import Link from 'next/link';
+import { usePathname, useRouter } from 'next/navigation';
+import { 
+  LayoutDashboard, 
+  MapPin, 
+  Store, 
+  Video, 
+  Camera, 
+  Coins, 
+  Bell,
+  LogOut,
+  ChevronRight,
+  ShoppingCart,
+  Heart,
+  CreditCard
+} from 'lucide-react';
+import { cn } from '../../lib/utils';
+
+const MENU_ITEMS = [
+  { title: 'Overview', icon: LayoutDashboard, href: '/dashboard' },
+  { title: 'Orders', icon: CreditCard, href: '/dashboard/payments' },
+  { title: 'Abandoned Carts', icon: ShoppingCart, href: '/dashboard/carts' },
+  { title: 'User Wishlists', icon: Heart, href: '/dashboard/wishlists' },
+  { title: 'Gold Coin', icon: Coins, href: '/dashboard/gold-coin-offer' },
+  { title: 'Topbar Offers', icon: Bell, href: '/dashboard/topbar-offers' },
+  { title: 'Pincodes', icon: MapPin, href: '/dashboard/pincodes' },
+  { title: 'Stores', icon: Store, href: '/dashboard/stores' },
+  { title: 'Curated Looks', icon: Camera, href: '/dashboard/curated-looks' },
+  { title: 'Styled Videos', icon: Video, href: '/dashboard/styled-videos' },
+];
+
+export default function AdminSidebar() {
+  const pathname = usePathname();
+  const router = useRouter();
+
+  const handleLogout = () => {
+    localStorage.removeItem('lucira_admin_auth');
+    router.push('/');
+  };
+
+  return (
+    <aside className='w-64 h-screen bg-white border-r border-zinc-100 flex flex-col fixed left-0 top-0 z-50'>
+      {/* Branding */}
+      <div className='p-8'>
+        <Link href='/dashboard' prefetch={false} className='flex items-center gap-3 font-black text-xl tracking-tighter text-zinc-900'>
+          <div className='bg-[#5A413F] p-2 rounded-xl text-white shadow-lg shadow-[#5A413F]/20'>
+            <LayoutDashboard size={20} />
+          </div>
+          Lucira CMS
+        </Link>
+      </div>
+
+      {/* Navigation */}
+      <nav className='flex-1 px-4 space-y-1.5 overflow-y-auto scrollbar-none py-2'>
+        {MENU_ITEMS.map((item) => {
+          const isActive = pathname === item.href;
+          return (
+            <Link 
+              key={item.title} 
+              href={item.href}
+              prefetch={false}
+              className={cn(
+                'flex items-center justify-between px-4 py-3.5 rounded-xl transition-all group',
+                isActive 
+                  ? 'bg-zinc-50 text-zinc-900 shadow-sm border border-zinc-100' 
+                  : 'text-zinc-400 hover:text-zinc-900 hover:bg-zinc-50/50'
+              )}
+            >
+              <div className='flex items-center gap-3'>
+                <item.icon 
+                  size={20} 
+                  className={cn(
+                    'transition-colors',
+                    isActive ? 'text-[#5A413F]' : 'group-hover:text-zinc-900'
+                  )} 
+                />
+                <span className='text-xs font-black uppercase tracking-[0.15em]'>
+                  {item.title}
+                </span>
+              </div>
+              {isActive && <ChevronRight size={14} className='text-[#5A413F]' />}
+            </Link>
+          );
+        })}
+      </nav>
+
+      {/* Footer / Logout */}
+      <div className='p-4 border-t border-zinc-50'>
+        <button 
+          onClick={handleLogout}
+          className='w-full flex items-center gap-3 px-4 py-4 text-rose-400 hover:text-rose-500 hover:bg-rose-50/50 rounded-xl transition-all font-black text-[10px] uppercase tracking-widest'
+        >
+          <LogOut size={18} />
+          Sign Out
+        </button>
+      </div>
+    </aside>
+  );
+}
