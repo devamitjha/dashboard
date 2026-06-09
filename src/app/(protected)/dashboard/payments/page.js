@@ -9,12 +9,15 @@ import { format } from 'date-fns';
 export default function PaymentsPage() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [startDate, setStartDate] = useState(format(new Date(), 'yyyy-MM-01'));
+  const [endDate, setEndDate] = useState(format(new Date(), 'yyyy-MM-dd'));
 
   useEffect(() => {
     async function fetchOrders() {
       try {
+        setLoading(true);
         const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://webuat.lucirajewelry.com';
-        const url = `${baseUrl}/api/admin/orders?t=${Date.now()}`;
+        const url = `${baseUrl}/api/admin/orders?start_date=${startDate}&end_date=${endDate}&t=${Date.now()}`;
         console.log('Fetching orders from:', url);
         const res = await fetch(url);
         const data = await res.json();
@@ -28,7 +31,7 @@ export default function PaymentsPage() {
       }
     }
     fetchOrders();
-  }, []);
+  }, [startDate, endDate]);
 
   const columns = [
     {
@@ -138,15 +141,38 @@ export default function PaymentsPage() {
           </h1>
           <p className="text-zinc-500 mt-1">Confirmed orders from the website (Shopify Admin API channel).</p>
         </div>
-        <div className="flex items-center gap-4 bg-white p-2 rounded-2xl border border-zinc-100 shadow-sm">
-            <div className="px-6 py-2 text-center border-r border-zinc-50">
-                <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Total Sales</p>
-                <p className="text-xl font-black text-zinc-900">₹{orders.reduce((acc, o) => acc + (o.totalAmount || 0), 0).toLocaleString()}</p>
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-xl border border-zinc-100 shadow-sm">
+            <div className="flex flex-col">
+              <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Start Date</span>
+              <input 
+                type="date" 
+                value={startDate} 
+                onChange={(e) => setStartDate(e.target.value)}
+                className="text-xs font-bold bg-transparent outline-none"
+              />
             </div>
-            <div className="px-6 py-2 text-center">
-                <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Orders</p>
-                <p className="text-xl font-black text-zinc-900">{orders.length}</p>
+            <div className="h-8 w-px bg-zinc-100 mx-2" />
+            <div className="flex flex-col">
+              <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">End Date</span>
+              <input 
+                type="date" 
+                value={endDate} 
+                onChange={(e) => setEndDate(e.target.value)}
+                className="text-xs font-bold bg-transparent outline-none"
+              />
             </div>
+          </div>
+          <div className="flex items-center gap-4 bg-white p-2 rounded-2xl border border-zinc-100 shadow-sm">
+              <div className="px-6 py-2 text-center border-r border-zinc-50">
+                  <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Total Sales</p>
+                  <p className="text-xl font-black text-zinc-900">₹{orders.reduce((acc, o) => acc + (o.totalAmount || 0), 0).toLocaleString()}</p>
+              </div>
+              <div className="px-6 py-2 text-center">
+                  <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Orders</p>
+                  <p className="text-xl font-black text-zinc-900">{orders.length}</p>
+              </div>
+          </div>
         </div>
       </div>
 
@@ -155,7 +181,7 @@ export default function PaymentsPage() {
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-500"></div>
         </div>
       ) : (
-        <DataTable columns={columns} data={orders} />
+        <DataTable columns={columns} data={orders} hideCount={true} />
       )}
     </div>
   );

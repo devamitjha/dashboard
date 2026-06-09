@@ -9,6 +9,7 @@ import { format } from 'date-fns';
 export default function AbandonedCartsPage() {
   const [carts, setCarts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [customerType, setCustomerType] = useState('ALL');
   const [startDate, setStartDate] = useState(format(new Date(), 'yyyy-MM-01'));
   const [endDate, setEndDate] = useState(format(new Date(), 'yyyy-MM-dd'));
 
@@ -16,7 +17,7 @@ export default function AbandonedCartsPage() {
     async function fetchCarts() {
       try {
         const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8080';
-        const res = await fetch(`${baseUrl}/api/admin/carts?start_date=${startDate}&end_date=${endDate}`);
+        const res = await fetch(`${baseUrl}/api/admin/carts?start_date=${startDate}&end_date=${endDate}&customer_type=${customerType}&t=${Date.now()}`, { cache: 'no-store' });
         const data = await res.json();
         if (data.success) {
           setCarts(data.data);
@@ -33,7 +34,7 @@ export default function AbandonedCartsPage() {
     // Auto-refresh every 60 seconds
     const interval = setInterval(fetchCarts, 60000);
     return () => clearInterval(interval);
-  }, [startDate, endDate]);
+  }, [startDate, endDate, customerType]);
 
   const columns = [
     {
@@ -185,6 +186,21 @@ export default function AbandonedCartsPage() {
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-xl border border-zinc-100 shadow-sm">
             <div className="flex flex-col">
+              <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Customer Details</span>
+              <select 
+                value={customerType} 
+                onChange={(e) => setCustomerType(e.target.value)}
+                className="text-xs font-bold bg-transparent outline-none cursor-pointer"
+              >
+                <option value="ALL">All Users</option>
+                <option value="CUSTOMER">Registered Customers</option>
+                <option value="GUEST">Guest Users</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-xl border border-zinc-100 shadow-sm">
+            <div className="flex flex-col">
               <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Start Date</span>
               <input 
                 type="date" 
@@ -226,7 +242,7 @@ export default function AbandonedCartsPage() {
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#5A413F]"></div>
         </div>
       ) : (
-        <DataTable columns={columns} data={carts} />
+        <DataTable columns={columns} data={carts} hideCount={true} />
       )}
     </div>
   );

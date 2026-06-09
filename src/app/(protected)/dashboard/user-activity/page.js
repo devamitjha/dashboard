@@ -10,20 +10,22 @@ export default function UserTrackingPage() {
   const [trackingData, setTrackingData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [dataSource, setDataSource] = useState('UAT');
+  const [activityType, setActivityType] = useState('ALL');
   const [startDate, setStartDate] = useState(format(new Date(), 'yyyy-MM-01'));
   const [endDate, setEndDate] = useState(format(new Date(), 'yyyy-MM-dd'));
 
   useEffect(() => {
     async function fetchTracking() {
       try {
+        setLoading(true);
         const isLocal = window.location.hostname === 'localhost';
         const uatUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8080';
-        const localUrl = 'http://127.0.0.1:8080';
+        const localUrl = 'http://localhost:8080';
         
         let baseUrl = uatUrl;
         if (isLocal) {
           try {
-            const healthCheck = await fetch(`${localUrl}/api/auth/admin-login`).catch(() => null);
+            const healthCheck = await fetch(`${localUrl}/api/auth/admin-login`, { cache: 'no-store' }).catch(() => null);
             if (healthCheck) {
               baseUrl = localUrl;
               setDataSource('Local (8080)');
@@ -37,8 +39,12 @@ export default function UserTrackingPage() {
           setDataSource('UAT');
         }
         
-        const res = await fetch(`${baseUrl}/api/admin/tracking?start_date=${startDate}&end_date=${endDate}`);
+        const url = `${baseUrl}/api/admin/tracking?start_date=${startDate}&end_date=${endDate}&type=${activityType}&t=${Date.now()}`;
+        console.log('Fetching tracking data from:', url);
+        
+        const res = await fetch(url, { cache: 'no-store' });
         const data = await res.json();
+        console.log('Tracking data response:', data);
         if (data.success) {
           setTrackingData(data.data);
         }
@@ -49,7 +55,7 @@ export default function UserTrackingPage() {
       }
     }
     fetchTracking();
-  }, [startDate, endDate]);
+  }, [startDate, endDate, activityType]);
 
   const formatDuration = (seconds) => {
     if (!seconds) return null;
@@ -191,6 +197,23 @@ export default function UserTrackingPage() {
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-xl border border-zinc-100 shadow-sm">
             <div className="flex flex-col">
+              <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Activity Type</span>
+              <select 
+                value={activityType} 
+                onChange={(e) => setActivityType(e.target.value)}
+                className="text-xs font-bold bg-transparent outline-none cursor-pointer"
+              >
+                <option value="ALL">All Activities</option>
+                <option value="LOGIN">Logins</option>
+                <option value="REGISTER">Registrations</option>
+                <option value="ADD_TO_CART">Add to Cart</option>
+                <option value="LOGOUT">Logouts</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-xl border border-zinc-100 shadow-sm">
+            <div className="flex flex-col">
               <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Start Date</span>
               <input 
                 type="date" 
@@ -226,16 +249,8 @@ export default function UserTrackingPage() {
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#5A413F]"></div>
         </div>
       ) : (
-        <div className="bg-white rounded-2xl border border-zinc-100 shadow-xl overflow-hidden">
-            {trackingData.length === 0 ? (
-              <div className="h-64 flex flex-col items-center justify-center text-zinc-400 gap-2">
-                <Users size={48} className="opacity-20" />
-                <p className="font-bold">No activity recorded yet</p>
-                <p className="text-xs">Tracking will appear here as users interact with the site.</p>
-              </div>
-            ) : (
-              <DataTable columns={columns} data={trackingData} />
-            )}
+        <div className="bg-white rounded-2xl border border-zinc-100 shadow-xl overflow-hidden p-6">
+            <DataTable columns={columns} data={trackingData} />
         </div>
       )}
     </div>

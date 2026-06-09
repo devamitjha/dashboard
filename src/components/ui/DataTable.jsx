@@ -10,7 +10,7 @@ import {
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Search } from "lucide-react";
 import { useState } from "react";
 
-export function DataTable({ columns, data }) {
+export function DataTable({ columns, data, hideCount = false }) {
   const [globalFilter, setGlobalFilter] = useState("");
 
   const table = useReactTable({
@@ -32,14 +32,26 @@ export function DataTable({ columns, data }) {
 
   return (
     <div className="w-full space-y-4">
-      <div className="flex items-center gap-2 max-w-sm px-4 py-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-sm group focus-within:ring-1 focus-within:ring-zinc-400 transition-all">
-        <Search size={18} className="text-zinc-400 group-focus-within:text-zinc-900 dark:group-focus-within:text-white" />
-        <input
-          placeholder="Search..."
-          value={globalFilter ?? ""}
-          onChange={e => setGlobalFilter(e.target.value)}
-          className="bg-transparent border-none outline-none text-sm w-full"
-        />
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center gap-2 max-w-sm px-4 py-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-sm group focus-within:ring-1 focus-within:ring-zinc-400 transition-all flex-1">
+          <Search size={18} className="text-zinc-400 group-focus-within:text-zinc-900 dark:group-focus-within:text-white" />
+          <input
+            placeholder="Search..."
+            value={globalFilter ?? ""}
+            onChange={e => setGlobalFilter(e.target.value)}
+            className="bg-transparent border-none outline-none text-sm w-full"
+          />
+        </div>
+        
+        {!hideCount && (
+          <div className="flex items-center gap-2 bg-zinc-50 dark:bg-zinc-800/50 px-4 py-2 rounded-xl border border-zinc-200 dark:border-zinc-800">
+            <span className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Records:</span>
+            <span className="text-sm font-bold text-zinc-900 dark:text-zinc-100">
+              {table.getFilteredRowModel().rows.length}
+              {table.getFilteredRowModel().rows.length !== data.length && ` / ${data.length}`}
+            </span>
+          </div>
+        )}
       </div>
 
       <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 overflow-hidden">
