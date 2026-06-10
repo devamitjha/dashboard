@@ -2,13 +2,13 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { 
-  LayoutDashboard, 
-  MapPin, 
-  Store, 
-  Video, 
-  Camera, 
-  Coins, 
+import {
+  LayoutDashboard,
+  MapPin,
+  Store,
+  Video,
+  Camera,
+  Coins,
   Bell,
   LogOut,
   ChevronRight,
@@ -16,7 +16,8 @@ import {
   Heart,
   CreditCard,
   RefreshCw,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Layers
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 
@@ -33,6 +34,7 @@ const MENU_ITEMS = [
   { title: 'Styled Videos', icon: Video, href: '/dashboard/styled-videos' },
   { title: 'Hero Banners', icon: ImageIcon, href: '/dashboard/hero-banners' },
   { title: 'Clear Cache', icon: RefreshCw, href: '/dashboard/revalidate' },
+  { title: 'Styled Video (Collection)', icon: Layers, href: '/dashboard/styled-videos-collection' },
 ];
 
 export default function AdminSidebar() {
@@ -61,24 +63,24 @@ export default function AdminSidebar() {
         {MENU_ITEMS.map((item) => {
           const isActive = pathname === item.href;
           return (
-            <Link 
-              key={item.title} 
+            <Link
+              key={item.title}
               href={item.href}
               prefetch={false}
               className={cn(
                 'flex items-center justify-between px-4 py-3.5 rounded-xl transition-all group',
-                isActive 
-                  ? 'bg-zinc-50 text-zinc-900 shadow-sm border border-zinc-100' 
+                isActive
+                  ? 'bg-zinc-50 text-zinc-900 shadow-sm border border-zinc-100'
                   : 'text-zinc-400 hover:text-zinc-900 hover:bg-zinc-50/50'
               )}
             >
               <div className='flex items-center gap-3'>
-                <item.icon 
-                  size={20} 
+                <item.icon
+                  size={20}
                   className={cn(
                     'transition-colors',
                     isActive ? 'text-[#5A413F]' : 'group-hover:text-zinc-900'
-                  )} 
+                  )}
                 />
                 <span className='text-xs font-black uppercase tracking-[0.15em]'>
                   {item.title}
@@ -92,7 +94,7 @@ export default function AdminSidebar() {
 
       {/* Footer / Logout */}
       <div className='p-4 border-t border-zinc-50'>
-        <button 
+        <button
           onClick={handleLogout}
           className='w-full flex items-center gap-3 px-4 py-4 text-rose-400 hover:text-rose-500 hover:bg-rose-50/50 rounded-xl transition-all font-black text-[10px] uppercase tracking-widest'
         >
