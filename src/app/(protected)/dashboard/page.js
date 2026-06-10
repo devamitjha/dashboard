@@ -12,7 +12,8 @@ import {
   LogIn,
   UserPlus,
   ShoppingCart,
-  CreditCard
+  CreditCard,
+  RefreshCw
 } from "lucide-react";
 
 const DASHBOARD_ITEMS = [
@@ -79,6 +80,20 @@ const DASHBOARD_ITEMS = [
     href: "/dashboard/styled-videos",
     icon: Video,
     color: "bg-indigo-50 text-indigo-600 border-indigo-100"
+  },
+  {
+    title: "Clear Cache",
+    description: "Clear Vercel cache for any page to instantly apply updates.",
+    href: "/dashboard/revalidate",
+    icon: RefreshCw,
+    color: "bg-teal-50 text-teal-600 border-teal-100"
+  },
+  {
+    title: "Hero Banners",
+    description: "Manage homepage hero slider images, videos, and links.",
+    href: "/dashboard/hero-banners",
+    icon: Camera, // Reusing Camera since it's already imported
+    color: "bg-orange-50 text-orange-600 border-orange-100"
   }
 ];
 

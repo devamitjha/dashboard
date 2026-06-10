@@ -117,19 +117,33 @@ export default function UserTrackingPage() {
         }
 
         return (
-          <div className="flex flex-col gap-1">
-            <Badge className={`${color} flex items-center gap-1.5 px-2.5 py-1 border font-bold text-[10px] uppercase tracking-widest w-fit`}>
-              <Icon size={12} />
-              {type.replace(/_/g, ' ')}
-            </Badge>
-            {row.original.product && (
-              <span className="text-[10px] font-medium text-zinc-500 line-clamp-1 max-w-[150px]">
-                {row.original.product}
+          <Badge className={`${color} flex items-center gap-1.5 px-2.5 py-1 border font-bold text-[10px] uppercase tracking-widest w-fit`}>
+            <Icon size={12} />
+            {type.replace(/_/g, ' ')}
+          </Badge>
+        );
+      },
+    },
+    {
+      header: 'Product / Details',
+      accessorKey: 'product',
+      cell: ({ row }) => {
+        const item = row.original;
+        if (!item.product && !item.variantId) return <span className="text-zinc-300">—</span>;
+        
+        return (
+          <div className="flex flex-col gap-0.5 max-w-[200px]">
+            <span className="text-xs font-bold text-zinc-900 line-clamp-1" title={item.product}>
+              {item.product || 'Unknown Product'}
+            </span>
+            {item.variantId && (
+              <span className="text-[9px] text-zinc-400 font-mono tracking-tighter truncate">
+                ID: {item.variantId.split('/').pop()}
               </span>
             )}
           </div>
         );
-      },
+      }
     },
     {
       header: 'Location / Page',

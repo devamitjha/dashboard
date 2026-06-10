@@ -14,7 +14,9 @@ import {
   ChevronRight,
   ShoppingCart,
   Heart,
-  CreditCard
+  CreditCard,
+  RefreshCw,
+  Image as ImageIcon
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 
@@ -29,6 +31,8 @@ const MENU_ITEMS = [
   { title: 'Stores', icon: Store, href: '/dashboard/stores' },
   { title: 'Curated Looks', icon: Camera, href: '/dashboard/curated-looks' },
   { title: 'Styled Videos', icon: Video, href: '/dashboard/styled-videos' },
+  { title: 'Hero Banners', icon: ImageIcon, href: '/dashboard/hero-banners' },
+  { title: 'Clear Cache', icon: RefreshCw, href: '/dashboard/revalidate' },
 ];
 
 export default function AdminSidebar() {
