@@ -29,6 +29,7 @@ const MENU_ITEMS = [
   { title: 'Stores', icon: Store, href: '/dashboard/stores' },
   { title: 'Curated Looks', icon: Camera, href: '/dashboard/curated-looks' },
   { title: 'Styled Videos', icon: Video, href: '/dashboard/styled-videos' },
+  { title: 'Daily Rates', icon: Coins, href: '/dashboard/update-rate' },
 ];
 
 export default function AdminSidebar() {

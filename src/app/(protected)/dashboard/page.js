@@ -12,10 +12,18 @@ import {
   LogIn,
   UserPlus,
   ShoppingCart,
-  CreditCard
+  CreditCard,
+  TrendingUp
 } from "lucide-react";
 
 const DASHBOARD_ITEMS = [
+  {
+    title: "Update Rate",
+    description: "Manage daily rates for gold, silver, and platinum pages.",
+    href: "/dashboard/update-rate",
+    icon: TrendingUp,
+    color: "bg-yellow-50 text-yellow-600 border-yellow-100"
+  },
   {
     title: "User Activity",
     description: "Track successful logins, registrations, and active session completions.",
