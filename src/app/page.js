@@ -33,9 +33,18 @@ export default function LoginPage() {
     e.preventDefault();
     setLoading(true);
 
-    if (username === 'admin' && password === 'Lucira@2026') {
+    const users = {
+      admin: { password: 'admin@1985', role: 'admin' },
+      marketing: { password: 'marketing@1985', role: 'marketing' },
+      cro: { password: 'cro@1985', role: 'cro' }
+    };
+
+    const user = users[username];
+
+    if (user && user.password === password) {
       localStorage.setItem('lucira_admin_auth', 'true');
-      toast.success('Access Granted');
+      localStorage.setItem('lucira_admin_role', user.role);
+      toast.success(`Access Granted (${user.role})`);
       router.push('/dashboard');
     } else {
       toast.error('Invalid Credentials');

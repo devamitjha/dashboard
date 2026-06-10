@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
@@ -17,7 +18,8 @@ import {
   CreditCard,
   RefreshCw,
   Image as ImageIcon,
-  Layers
+  Layers,
+  Users
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 
@@ -36,14 +38,21 @@ const MENU_ITEMS = [
   { title: 'Clear Cache', icon: RefreshCw, href: '/dashboard/revalidate' },
   { title: 'Styled Video (Collection)', icon: Layers, href: '/dashboard/styled-videos-collection' },
   { title: 'Daily Rates', icon: Coins, href: '/dashboard/update-rate' },
+  { title: 'User Activity', icon: Users, href: '/dashboard/user-activity' },
 ];
 
 export default function AdminSidebar() {
   const pathname = usePathname();
   const router = useRouter();
+  const [role, setRole] = useState(null);
+
+  useEffect(() => {
+    setRole(localStorage.getItem('lucira_admin_role') || 'admin');
+  }, []);
 
   const handleLogout = () => {
     localStorage.removeItem('lucira_admin_auth');
+    localStorage.removeItem('lucira_admin_role');
     router.push('/');
   };
 
@@ -61,7 +70,17 @@ export default function AdminSidebar() {
 
       {/* Navigation */}
       <nav className='flex-1 px-4 space-y-1.5 overflow-y-auto scrollbar-none py-2'>
-        {MENU_ITEMS.map((item) => {
+        {MENU_ITEMS.filter(item => {
+          if (!role) return false;
+          if (role === 'admin') return true;
+          if (role === 'marketing') {
+            return ['/dashboard', '/dashboard/revalidate', '/dashboard/update-rate'].includes(item.href);
+          }
+          if (role === 'cro') {
+            return ['/dashboard', '/dashboard/payments', '/dashboard/carts', '/dashboard/wishlists', '/dashboard/user-activity'].includes(item.href);
+          }
+          return false;
+        }).map((item) => {
           const isActive = pathname === item.href;
           return (
             <Link

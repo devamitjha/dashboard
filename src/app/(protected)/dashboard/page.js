@@ -1,3 +1,6 @@
+'use client';
+
+import { useState, useEffect } from 'react';
 import Link from "next/link";
 import {
   LayoutDashboard,
@@ -14,7 +17,8 @@ import {
   ShoppingCart,
   CreditCard,
   RefreshCw,
-  TrendingUp
+  TrendingUp,
+  Heart
 } from "lucide-react";
 
 const DASHBOARD_ITEMS = [
@@ -34,7 +38,7 @@ const DASHBOARD_ITEMS = [
     isTracking: true
   },
   {
-    title: "Website Orders",
+    title: "Orders",
     description: "View and track confirmed payments and orders placed through the website.",
     href: "/dashboard/payments",
     icon: CreditCard,
@@ -46,6 +50,13 @@ const DASHBOARD_ITEMS = [
     href: "/dashboard/carts",
     icon: ShoppingCart,
     color: "bg-zinc-50 text-zinc-600 border-zinc-100"
+  },
+  {
+    title: "User Wishlists",
+    description: "Monitor customer wishlists and saved items.",
+    href: "/dashboard/wishlists",
+    icon: Heart,
+    color: "bg-rose-50 text-rose-600 border-rose-100"
   },
   {
     title: "Gold Coin Offer",
@@ -106,6 +117,24 @@ const DASHBOARD_ITEMS = [
 ];
 
 export default function Dashboard() {
+  const [role, setRole] = useState(null);
+
+  useEffect(() => {
+    setRole(localStorage.getItem('lucira_admin_role') || 'admin');
+  }, []);
+
+  const filteredItems = DASHBOARD_ITEMS.filter(item => {
+    if (!role) return false;
+    if (role === 'admin') return true;
+    if (role === 'marketing') {
+      return ['/dashboard/revalidate', '/dashboard/update-rate'].includes(item.href);
+    }
+    if (role === 'cro') {
+      return ['/dashboard/payments', '/dashboard/carts', '/dashboard/wishlists', '/dashboard/user-activity'].includes(item.href);
+    }
+    return false;
+  });
+
   return (
     <div className="container-main py-10 px-4">
       <div className="flex flex-col md:flex-row md:items-center justify-between mb-10 gap-4">
@@ -123,7 +152,7 @@ export default function Dashboard() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {DASHBOARD_ITEMS.map((item) => (
+        {filteredItems.map((item) => (
           <Link
             key={item.title}
             href={item.href}

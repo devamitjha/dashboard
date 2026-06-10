@@ -11,12 +11,28 @@ export default function AdminAuthGate({ children }) {
 
   useEffect(() => {
     const auth = localStorage.getItem('lucira_admin_auth');
+    const role = localStorage.getItem('lucira_admin_role') || 'admin';
+
     if (auth !== 'true') {
       router.push('/');
+      return;
+    }
+
+    let allowed = false;
+    if (role === 'admin') {
+      allowed = true;
+    } else if (role === 'marketing') {
+      allowed = ['/dashboard', '/dashboard/revalidate', '/dashboard/update-rate'].includes(pathname);
+    } else if (role === 'cro') {
+      allowed = ['/dashboard', '/dashboard/payments', '/dashboard/carts', '/dashboard/wishlists', '/dashboard/user-activity'].includes(pathname);
+    }
+
+    if (!allowed) {
+      router.push('/dashboard');
     } else {
       setIsAuthorized(true);
     }
-  }, [router]);
+  }, [router, pathname]);
 
   if (!isAuthorized) {
     return (
