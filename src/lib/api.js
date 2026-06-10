@@ -1,13 +1,22 @@
 /* ================= GENERIC API FETCH ================= */
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "";
+const DEFAULT_BACKEND_URL = "http://localhost:8080";
+const DEFAULT_LOCALHOST_BACKEND_URL = "http://127.0.0.1:8080";
 
-const apiFetch = async (url, options = {}) => {
+const configuredBackendUrl = (process.env.NEXT_PUBLIC_BACKEND_URL && process.env.NEXT_PUBLIC_BACKEND_URL.trim() !== "")
+  ? process.env.NEXT_PUBLIC_BACKEND_URL
+  : DEFAULT_BACKEND_URL;
+
+const isLocalhost = typeof window !== "undefined" && /^(localhost|127\.0\.0\.1)$/.test(window.location.hostname);
+const BACKEND_URL = isLocalhost ? DEFAULT_LOCALHOST_BACKEND_URL : configuredBackendUrl;
+
+export const apiFetch = async (url, options = {}) => {
   // Determine if the URL should be prefixed with the backend base
   const isExternal = url.startsWith("/api/cart") || 
                     url.startsWith("/api/wishlist") || 
                     url.startsWith("/api/pincodes") ||
                     url.startsWith("/api/customer/orders") ||
+                    url.startsWith("/api/rates") ||
                     url.startsWith("/api/stores");
   
   const finalUrl = isExternal ? `${BACKEND_URL}${url}` : url;

@@ -35,6 +35,7 @@ const MENU_ITEMS = [
   { title: 'Hero Banners', icon: ImageIcon, href: '/dashboard/hero-banners' },
   { title: 'Clear Cache', icon: RefreshCw, href: '/dashboard/revalidate' },
   { title: 'Styled Video (Collection)', icon: Layers, href: '/dashboard/styled-videos-collection' },
+  { title: 'Daily Rates', icon: Coins, href: '/dashboard/update-rate' },
 ];
 
 export default function AdminSidebar() {

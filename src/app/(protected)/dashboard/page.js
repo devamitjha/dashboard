@@ -1,11 +1,11 @@
 import Link from "next/link";
-import { 
-  LayoutDashboard, 
-  MapPin, 
-  Store, 
-  Video, 
-  Camera, 
-  Coins, 
+import {
+  LayoutDashboard,
+  MapPin,
+  Store,
+  Video,
+  Camera,
+  Coins,
   Bell,
   ExternalLink,
   Users,
@@ -13,10 +13,18 @@ import {
   UserPlus,
   ShoppingCart,
   CreditCard,
-  RefreshCw
+  RefreshCw,
+  TrendingUp
 } from "lucide-react";
 
 const DASHBOARD_ITEMS = [
+  {
+    title: "Update Rate",
+    description: "Manage daily rates for gold, silver, and platinum pages.",
+    href: "/dashboard/update-rate",
+    icon: TrendingUp,
+    color: "bg-yellow-50 text-yellow-600 border-yellow-100"
+  },
   {
     title: "User Activity",
     description: "Track successful logins, registrations, and active session completions.",
@@ -116,8 +124,8 @@ export default function Dashboard() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {DASHBOARD_ITEMS.map((item) => (
-          <Link 
-            key={item.title} 
+          <Link
+            key={item.title}
             href={item.href}
             prefetch={false}
             className={`group block bg-white border border-gray-100 rounded-xl p-6 transition-all hover:shadow-md hover:border-primary/20 ${item.isTracking ? 'ring-2 ring-emerald-500/5 ring-offset-2' : ''}`}
