@@ -14,7 +14,8 @@ import {
   ChevronRight,
   ShoppingCart,
   Heart,
-  CreditCard
+  CreditCard,
+  Layers
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 
@@ -29,6 +30,7 @@ const MENU_ITEMS = [
   { title: 'Stores', icon: Store, href: '/dashboard/stores' },
   { title: 'Curated Looks', icon: Camera, href: '/dashboard/curated-looks' },
   { title: 'Styled Videos', icon: Video, href: '/dashboard/styled-videos' },
+  { title: 'Styled Video (Collection)', icon: Layers, href: '/dashboard/styled-videos-collection' },
 ];
 
 export default function AdminSidebar() {
