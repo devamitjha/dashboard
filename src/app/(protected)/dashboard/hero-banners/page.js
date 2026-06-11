@@ -61,6 +61,8 @@ export default function HeroBannersPage() {
       id: Date.now().toString(),
       type: 'image',
       name: 'New Banner',
+      title: '',
+      subtitle: '',
       alt: '',
       url: '/',
       desktopImage: '',
@@ -179,6 +181,27 @@ export default function HeroBannersPage() {
                       <option value="image">Image</option>
                       <option value="video">Video</option>
                     </select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-zinc-400">OVERLAY TITLE</label>
+                    <input
+                      value={banner.title || ''}
+                      onChange={(e) => updateBanner(index, 'title', e.target.value)}
+                      placeholder="e.g. A NEW CHAPTER"
+                      className="w-full px-4 py-3 bg-zinc-50 border border-zinc-100 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-black"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-zinc-400">OVERLAY SUBTITLE / CTA</label>
+                    <input
+                      value={banner.subtitle || ''}
+                      onChange={(e) => updateBanner(index, 'subtitle', e.target.value)}
+                      placeholder="e.g. DISCOVER THE COLLECTION"
+                      className="w-full px-4 py-3 bg-zinc-50 border border-zinc-100 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-black"
+                    />
                   </div>
                 </div>
 
