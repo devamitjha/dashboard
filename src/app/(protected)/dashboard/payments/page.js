@@ -9,7 +9,7 @@ import { format } from 'date-fns';
 export default function PaymentsPage() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [startDate, setStartDate] = useState(format(new Date(), 'yyyy-MM-01'));
+  const [startDate, setStartDate] = useState(format(new Date(), 'yyyy-MM-dd'));
   const [endDate, setEndDate] = useState(format(new Date(), 'yyyy-MM-dd'));
 
   useEffect(() => {
@@ -159,6 +159,7 @@ export default function PaymentsPage() {
                 type="date" 
                 value={endDate} 
                 onChange={(e) => setEndDate(e.target.value)}
+                max={format(new Date(), 'yyyy-MM-dd')}
                 className="text-xs font-bold bg-transparent outline-none"
               />
             </div>

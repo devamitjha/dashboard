@@ -10,7 +10,7 @@ export default function AbandonedCartsPage() {
   const [carts, setCarts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [customerType, setCustomerType] = useState('ALL');
-  const [startDate, setStartDate] = useState(format(new Date(), 'yyyy-MM-01'));
+  const [startDate, setStartDate] = useState(format(new Date(), 'yyyy-MM-dd'));
   const [endDate, setEndDate] = useState(format(new Date(), 'yyyy-MM-dd'));
 
   useEffect(() => {
@@ -216,6 +216,7 @@ export default function AbandonedCartsPage() {
                 type="date" 
                 value={endDate} 
                 onChange={(e) => setEndDate(e.target.value)}
+                max={format(new Date(), 'yyyy-MM-dd')}
                 className="text-xs font-bold bg-transparent outline-none"
               />
             </div>

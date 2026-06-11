@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from "next/link";
+import { format } from 'date-fns';
 import {
   LayoutDashboard,
   MapPin,
@@ -118,9 +119,74 @@ const DASHBOARD_ITEMS = [
 
 export default function Dashboard() {
   const [role, setRole] = useState(null);
+  const [counts, setCounts] = useState({
+    carts: { today: 0, total: 0 },
+    orders: { today: 0, total: 0 },
+    wishlists: { today: 0, total: 0 },
+    activity: { today: 0, total: 0 }
+  });
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     setRole(localStorage.getItem('lucira_admin_role') || 'admin');
+
+    async function fetchSummaryCounts() {
+      try {
+        const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8080';
+        const today = format(new Date(), 'yyyy-MM-dd');
+        
+        // Fetch Today's Data
+        const [cartsTodayRes, ordersTodayRes, wishlistsTodayRes, activityTodayRes] = await Promise.all([
+          fetch(`${baseUrl}/api/admin/carts?start_date=${today}&end_date=${today}&t=${Date.now()}`),
+          fetch(`${baseUrl}/api/admin/orders?start_date=${today}&end_date=${today}&t=${Date.now()}`),
+          fetch(`${baseUrl}/api/admin/wishlists?start_date=${today}&end_date=${today}&t=${Date.now()}`),
+          fetch(`${baseUrl}/api/admin/tracking?start_date=${today}&end_date=${today}&t=${Date.now()}`)
+        ]);
+
+        // Fetch Total Data (No date filter)
+        const [cartsTotalRes, ordersTotalRes, wishlistsTotalRes, activityTotalRes] = await Promise.all([
+          fetch(`${baseUrl}/api/admin/carts?t=${Date.now()}`),
+          fetch(`${baseUrl}/api/admin/orders?t=${Date.now()}`),
+          fetch(`${baseUrl}/api/admin/wishlists?t=${Date.now()}`),
+          fetch(`${baseUrl}/api/admin/tracking?t=${Date.now()}`)
+        ]);
+
+        const [
+          cartsToday, ordersToday, wishlistsToday, activityToday,
+          cartsTotal, ordersTotal, wishlistsTotal, activityTotal
+        ] = await Promise.all([
+          cartsTodayRes.json(), ordersTodayRes.json(), wishlistsTodayRes.json(), activityTodayRes.json(),
+          cartsTotalRes.json(), ordersTotalRes.json(), wishlistsTotalRes.json(), activityTotalRes.json()
+        ]);
+
+        setCounts({
+          carts: {
+            today: cartsToday.success ? cartsToday.data.length : 0,
+            total: cartsTotal.success ? cartsTotal.data.length : 0
+          },
+          orders: {
+            today: ordersToday.success ? ordersToday.data.length : 0,
+            total: ordersTotal.success ? ordersTotal.data.length : 0
+          },
+          wishlists: {
+            today: wishlistsToday.success ? wishlistsToday.data.length : 0,
+            total: wishlistsTotal.success ? wishlistsTotal.data.length : 0
+          },
+          activity: {
+            today: activityToday.success ? activityToday.data.length : 0,
+            total: activityTotal.success ? activityTotal.data.length : 0
+          }
+        });
+      } catch (err) {
+        console.error('Failed to fetch summary counts:', err);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchSummaryCounts();
+    const interval = setInterval(fetchSummaryCounts, 60000);
+    return () => clearInterval(interval);
   }, []);
 
   const filteredItems = DASHBOARD_ITEMS.filter(item => {
@@ -134,6 +200,41 @@ export default function Dashboard() {
     }
     return false;
   });
+
+  const summaryCards = [
+    {
+      title: "Abandoned Carts",
+      today: counts.carts.today,
+      total: counts.carts.total,
+      icon: ShoppingCart,
+      href: "/dashboard/carts",
+      color: "text-zinc-600 bg-zinc-50 border-zinc-100"
+    },
+    {
+      title: "Confirmed Orders",
+      today: counts.orders.today,
+      total: counts.orders.total,
+      icon: CreditCard,
+      href: "/dashboard/payments",
+      color: "text-emerald-600 bg-emerald-50 border-emerald-100"
+    },
+    {
+      title: "User Wishlists",
+      today: counts.wishlists.today,
+      total: counts.wishlists.total,
+      icon: Heart,
+      href: "/dashboard/wishlists",
+      color: "text-rose-600 bg-rose-50 border-rose-100"
+    },
+    {
+      title: "User Activity",
+      today: counts.activity.today,
+      total: counts.activity.total,
+      icon: Users,
+      href: "/dashboard/user-activity",
+      color: "text-[#5A413F] bg-[#5A413F]/5 border-[#5A413F]/10"
+    }
+  ];
 
   return (
     <div className="container-main py-10 px-4">
@@ -149,6 +250,53 @@ export default function Dashboard() {
           <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
           Connected to MongoDB Atlas
         </div>
+      </div>
+
+      {/* Summary Row */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
+        {summaryCards.map((card) => (
+          <Link 
+            key={card.title} 
+            href={card.href}
+            className="group bg-white border border-zinc-100 rounded-2xl p-5 transition-all hover:shadow-lg hover:-translate-y-1"
+          >
+            <div className="flex items-center justify-between mb-4">
+              <div className={`p-2.5 rounded-xl border ${card.color}`}>
+                <card.icon size={20} />
+              </div>
+              <div className="flex flex-col items-end">
+                <div className="flex items-center gap-1">
+                  <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  <span className="text-[9px] font-black text-zinc-400 uppercase tracking-widest">Live</span>
+                </div>
+                <span className="text-[8px] font-bold text-zinc-300 uppercase tracking-tighter">Updating...</span>
+              </div>
+            </div>
+            
+            <div className="space-y-3">
+              <div>
+                <p className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.2em] mb-1">{card.title}</p>
+                <div className="flex items-baseline gap-2">
+                  <h3 className="text-3xl font-black text-zinc-900">
+                    {loading ? (
+                      <span className="inline-block h-8 w-12 bg-zinc-100 animate-pulse rounded" />
+                    ) : (
+                      card.today
+                    )}
+                  </h3>
+                  <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded uppercase tracking-tighter">Today</span>
+                </div>
+              </div>
+
+              <div className="pt-3 border-t border-zinc-50 flex items-center justify-between">
+                <span className="text-[9px] font-bold text-zinc-400 uppercase tracking-wider">All Time Total</span>
+                <span className="text-xs font-black text-zinc-600">
+                  {loading ? "..." : card.total.toLocaleString()}
+                </span>
+              </div>
+            </div>
+          </Link>
+        ))}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
