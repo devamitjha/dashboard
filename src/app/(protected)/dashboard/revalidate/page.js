@@ -26,10 +26,10 @@ export default function RevalidatePage() {
         return;
       }
 
-      const origin = targetUrl.origin;
       const path = targetUrl.pathname;
+      const LIVE_URL = "https://www.lucirajewelry.com";
 
-      const response = await fetch(`${origin}/api/revalidate`, {
+      const response = await fetch(`${LIVE_URL}/api/revalidate`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

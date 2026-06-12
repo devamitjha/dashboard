@@ -74,7 +74,7 @@ export default function AdminSidebar() {
           if (!role) return false;
           if (role === 'admin') return true;
           if (role === 'marketing') {
-            return ['/dashboard', '/dashboard/revalidate', '/dashboard/update-rate'].includes(item.href);
+            return ['/dashboard', '/dashboard/revalidate', '/dashboard/update-rate', '/dashboard/curated-looks', '/dashboard/styled-videos', '/dashboard/styled-videos-collection'].includes(item.href);
           }
           if (role === 'cro') {
             return ['/dashboard', '/dashboard/payments', '/dashboard/carts', '/dashboard/wishlists', '/dashboard/user-activity'].includes(item.href);
