@@ -13,7 +13,10 @@ export default function StyledVideosCollectionDashboard() {
   const [searchTerm, setSearchTerm] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [searching, setSearching] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [pagination, setPagination] = useState({ hasNextPage: false, endCursor: null });
   const [activeSlot, setActiveSlot] = useState(null); // { videoIndex, productIndex }
+  const [selectedProducts, setSelectedProducts] = useState([]);
 
   const fetchVideos = async () => {
     try {
@@ -28,6 +31,23 @@ export default function StyledVideosCollectionDashboard() {
   };
 
   useEffect(() => { fetchVideos(); }, []);
+
+  // When modal opens, initialize selected products if editing existing slot
+  useEffect(() => {
+    if (activeSlot) {
+      const { videoIndex, productIndex } = activeSlot;
+      // Auto-search if collection handle exists
+      const collectionHandle = videos[videoIndex]?.collectionHandle;
+      if (collectionHandle) {
+        searchProducts('', collectionHandle);
+      }
+    } else {
+      setSelectedProducts([]);
+      setSearchResults([]);
+      setSearchTerm('');
+      setPagination({ hasNextPage: false, endCursor: null });
+    }
+  }, [activeSlot]);
 
   const handleSave = async () => {
     setSaving(true);
@@ -80,50 +100,103 @@ export default function StyledVideosCollectionDashboard() {
     setVideos(nv);
   };
 
-  const searchProducts = async (q) => {
-    if (!q) return setSearchResults([]);
-    setSearching(true);
+  const searchProducts = async (q, handle = '', cursor = '') => {
+    if (cursor) setLoadingMore(true);
+    else setSearching(true);
+
     try {
-      const res = await fetch('/api/products/search?q=' + encodeURIComponent(q) + '&limit=5');
+      const queryParams = new URLSearchParams();
+      if (q) queryParams.append('q', q);
+      if (handle) queryParams.append('handle', handle);
+      if (cursor) queryParams.append('cursor', cursor);
+      queryParams.append('limit', '12');
+
+      const res = await fetch('/api/products/search?' + queryParams.toString());
       const data = await res.json();
-      setSearchResults(data.products || []);
+      
+      if (cursor) {
+        setSearchResults(prev => {
+          const newBatch = data.products || [];
+          const existingIds = new Set(prev.map(p => p.id));
+          const filteredBatch = newBatch.filter(p => !existingIds.has(p.id));
+          return [...prev, ...filteredBatch];
+        });
+      } else {
+        setSearchResults(data.products || []);
+      }
+      setPagination(data.pagination || { hasNextPage: false, endCursor: null });
     } catch (err) {
       console.error(err);
     } finally {
       setSearching(false);
+      setLoadingMore(false);
+    }
+  };
+
+  const handleScroll = (e) => {
+    const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
+    if (scrollHeight - scrollTop <= clientHeight + 50) {
+      if (pagination.hasNextPage && !loadingMore && !searching) {
+        searchProducts(searchTerm, videos[activeSlot.videoIndex]?.collectionHandle, pagination.endCursor);
+      }
     }
   };
 
   useEffect(() => {
-    const timer = setTimeout(() => { if (searchTerm) searchProducts(searchTerm); }, 500);
+    const timer = setTimeout(() => { 
+        if (activeSlot !== null) {
+            searchProducts(searchTerm, videos[activeSlot.videoIndex]?.collectionHandle); 
+        }
+    }, 500);
     return () => clearTimeout(timer);
   }, [searchTerm]);
 
-  const selectProduct = (product) => {
-    if (!activeSlot) return;
+  const toggleProductSelection = (product) => {
+    const isSelected = selectedProducts.some(p => p.id === product.id);
+    if (isSelected) {
+      setSelectedProducts(selectedProducts.filter(p => p.id !== product.id));
+    } else {
+      if (activeSlot?.productIndex === -1) {
+        // Multi-select mode
+        const currentCount = videos[activeSlot.videoIndex]?.products?.length || 0;
+        if (currentCount + selectedProducts.length >= 5) {
+            toast.warn('Maximum 5 products allowed per video');
+            return;
+        }
+        setSelectedProducts([...selectedProducts, product]);
+      } else {
+        // Single replacement mode
+        setSelectedProducts([product]);
+      }
+    }
+  };
+
+  const confirmSelection = () => {
+    if (!activeSlot || selectedProducts.length === 0) return;
     const { videoIndex, productIndex } = activeSlot;
     const nv = [...videos];
     const video = { ...nv[videoIndex] };
     const formatPrice = (num) => '₹' + new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 }).format(Math.round(num));
 
-    const productData = {
-      productId: product.id,
-      image: product.image || '',
-      title: product.title,
-      price: formatPrice(product.price || 0),
-      url: '/products/' + product.handle
-    };
+    const newProducts = [...(video.products || [])];
+    
+    selectedProducts.forEach(product => {
+        const productData = {
+            productId: product.id,
+            image: product.image || '',
+            title: product.title,
+            price: formatPrice(product.price || 0),
+            url: '/products/' + product.handle
+        };
 
-    const newProducts = [...video.products];
-    if (productIndex === -1) {
-      if (newProducts.length >= 5) {
-        alert('Maximum 5 products allowed per video');
-        return;
-      }
-      newProducts.push(productData);
-    } else {
-      newProducts[productIndex] = productData;
-    }
+        if (productIndex === -1) {
+            if (newProducts.length < 5) {
+                newProducts.push(productData);
+            }
+        } else {
+            newProducts[productIndex] = productData;
+        }
+    });
 
     video.products = newProducts;
     const total = newProducts.reduce((acc, p) => acc + (parseInt(p.price.replace(/[^\d]/g, '')) || 0), 0);
@@ -133,6 +206,7 @@ export default function StyledVideosCollectionDashboard() {
     setVideos(nv);
     setActiveSlot(null);
     setSearchTerm('');
+    setSelectedProducts([]);
   };
 
   if (loading) return <div className='flex justify-center py-40'><Loader2 className='animate-spin text-zinc-300' size={40} /></div>;
@@ -220,22 +294,41 @@ export default function StyledVideosCollectionDashboard() {
       {activeSlot !== null && (
         <div className='fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm'>
           <div className='bg-white w-full max-w-2xl rounded-[2.5rem] shadow-2xl overflow-hidden border border-zinc-100'>
-            <div className='p-8 border-b border-zinc-50 flex justify-between items-center bg-zinc-50/50'><h2 className='text-xl font-black flex items-center gap-3'><Package size={24} className='text-zinc-400' /> SELECT PRODUCT</h2><button onClick={() => {setActiveSlot(null); setSearchTerm(''); setSearchResults([]);}} className='p-2 hover:bg-white rounded-full border border-transparent hover:border-zinc-200'><X size={20} /></button></div>
+            <div className='p-8 border-b border-zinc-50 flex justify-between items-center bg-zinc-50/50'>
+                <div>
+                    <h2 className='text-xl font-black flex items-center gap-3'><Package size={24} className='text-zinc-400' /> SELECT PRODUCT</h2>
+                    {videos[activeSlot.videoIndex]?.collectionHandle && <p className='text-[10px] font-bold text-zinc-400 mt-1 uppercase tracking-widest'>Filtering by collection: {videos[activeSlot.videoIndex].collectionHandle}</p>}
+                </div>
+                <button onClick={() => setActiveSlot(null)} className='p-2 hover:bg-white rounded-full border border-transparent hover:border-zinc-200'><X size={20} /></button>
+            </div>
             <div className='p-8 space-y-8'>
               <div className='relative group'><Search className='absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400' size={20} /><input type='text' autoFocus placeholder='Search products by title...' value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className='w-full pl-12 pr-6 py-4 bg-zinc-100/50 border border-transparent focus:border-zinc-200 rounded-2xl text-sm focus:outline-none focus:ring-4 focus:ring-black/5 font-medium' /></div>
-              <div className='space-y-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar'>
+              <div onScroll={handleScroll} className='space-y-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar'>
                 {searching ? <div className='flex justify-center py-16'><Loader2 className='animate-spin text-zinc-200' size={32} /></div> : searchResults.length > 0 ? (
-                  searchResults.map(p => (
-                    <button key={p.id} onClick={() => selectProduct(p)} className='w-full flex items-center gap-5 p-4 rounded-2xl hover:bg-zinc-50 transition-all text-left border border-transparent hover:border-zinc-100'>
-                      <div className='w-16 h-16 bg-white rounded-xl border border-zinc-100 overflow-hidden relative shrink-0'><img src={p.image || p.images?.[0]?.url} className='w-full h-full object-cover' /></div>
-                      <div className='flex-1 min-w-0'><p className='font-bold text-sm truncate'>{p.title}</p><p className='text-xs font-black mt-1'>₹{new Intl.NumberFormat('en-IN').format(p.price)}</p></div>
-                      <Plus size={16} className='text-zinc-300' />
-                    </button>
-                  ))
+                  <>
+                    {searchResults.map(p => {
+                      const isSelected = selectedProducts.some(sp => sp.id === p.id);
+                      return (
+                          <button key={p.id} onClick={() => toggleProductSelection(p)} className={`w-full flex items-center gap-5 p-4 rounded-2xl transition-all text-left border ${isSelected ? 'bg-black text-white border-black' : 'hover:bg-zinc-50 border-transparent hover:border-zinc-100'}`}>
+                            <div className='w-16 h-16 bg-white rounded-xl border border-zinc-100 overflow-hidden relative shrink-0'><img src={p.image || p.images?.[0]?.url} className='w-full h-full object-cover' /></div>
+                            <div className='flex-1 min-w-0'><p className='font-bold text-sm truncate'>{p.title}</p><p className={`text-xs font-black mt-1 ${isSelected ? 'text-zinc-400' : ''}`}>₹{new Intl.NumberFormat('en-IN').format(p.price)}</p></div>
+                            {isSelected ? <X size={16} className='text-white' /> : <Plus size={16} className='text-zinc-300' />}
+                          </button>
+                      );
+                    })}
+                    {loadingMore && <div className='flex justify-center py-4'><Loader2 className='animate-spin text-zinc-200' size={24} /></div>}
+                  </>
                 ) : (
-                  <div className='text-center py-16 text-zinc-400'><Search size={40} className='mx-auto mb-4' /><p className='text-sm font-bold uppercase tracking-widest text-[10px]'>Start searching above</p></div>
+                  <div className='text-center py-16 text-zinc-400'><Search size={40} className='mx-auto mb-4' /><p className='text-sm font-bold uppercase tracking-widest text-[10px]'>{searchTerm ? 'No products found' : 'Loading collection products...'}</p></div>
                 )}
               </div>
+
+              {selectedProducts.length > 0 && (
+                <div className='pt-4 border-t border-zinc-100 flex items-center justify-between'>
+                    <p className='text-xs font-bold text-zinc-500'>{selectedProducts.length} product(s) selected</p>
+                    <button onClick={confirmSelection} className='bg-black text-white px-8 py-3 rounded-xl font-bold text-[10px] uppercase tracking-widest'>Confirm Selection</button>
+                </div>
+              )}
             </div>
           </div>
         </div>
