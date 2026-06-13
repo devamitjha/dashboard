@@ -19,7 +19,8 @@ import {
   CreditCard,
   RefreshCw,
   TrendingUp,
-  Heart
+  Heart,
+  Gift
 } from "lucide-react";
 
 const DASHBOARD_ITEMS = [
@@ -114,6 +115,13 @@ const DASHBOARD_ITEMS = [
     href: "/dashboard/hero-banners",
     icon: Camera, // Reusing Camera since it's already imported
     color: "bg-orange-50 text-orange-600 border-orange-100"
+  },
+  {
+    title: "Scheme Offer",
+    description: "Manage promotional gifts, thresholds, and visibility for savings schemes.",
+    href: "/dashboard/scheme-offer",
+    icon: Gift,
+    color: "bg-rose-50 text-rose-600 border-rose-100"
   }
 ];
 
