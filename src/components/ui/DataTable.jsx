@@ -7,13 +7,27 @@ import {
   getPaginationRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Search } from "lucide-react";
-import { useState } from "react";
+import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Search, Loader2 } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
 
-export function DataTable({ columns, data, hideCount = false }) {
+export function DataTable({ 
+  columns, 
+  data, 
+  hideCount = false,
+  serverSide = false,
+  totalCount = 0,
+  pageIndex = 0,
+  pageSize = 10,
+  onPageChange,
+  onPageSizeChange,
+  infiniteScroll = false,
+  onLoadMore,
+  hasMore = false,
+  loading = false,
+}) {
   const [globalFilter, setGlobalFilter] = useState("");
 
-  const table = useReactTable({
+  const tableOptions = {
     data,
     columns,
     state: {
@@ -23,12 +37,67 @@ export function DataTable({ columns, data, hideCount = false }) {
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
-    initialState: {
+  };
+
+  if (serverSide) {
+    tableOptions.manualPagination = true;
+    tableOptions.pageCount = Math.ceil(totalCount / pageSize) || 1;
+    tableOptions.state.pagination = {
+      pageIndex,
+      pageSize,
+    };
+    tableOptions.onPaginationChange = (updater) => {
+      if (typeof updater === 'function') {
+        const nextState = updater({ pageIndex, pageSize });
+        if (nextState.pageIndex !== pageIndex && onPageChange) {
+          onPageChange(nextState.pageIndex);
+        }
+        if (nextState.pageSize !== pageSize && onPageSizeChange) {
+          onPageSizeChange(nextState.pageSize);
+        }
+      } else {
+        const nextState = updater;
+        if (nextState.pageIndex !== pageIndex && onPageChange) {
+          onPageChange(nextState.pageIndex);
+        }
+        if (nextState.pageSize !== pageSize && onPageSizeChange) {
+          onPageSizeChange(nextState.pageSize);
+        }
+      }
+    };
+  } else {
+    tableOptions.initialState = {
       pagination: {
         pageSize: 10,
       },
-    },
-  });
+    };
+  }
+
+  const table = useReactTable(tableOptions);
+  const observerTarget = useRef(null);
+
+  useEffect(() => {
+    if (!infiniteScroll || !hasMore || loading || !onLoadMore) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          onLoadMore();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (observerTarget.current) {
+      observer.observe(observerTarget.current);
+    }
+
+    return () => {
+      if (observerTarget.current) {
+        observer.unobserve(observerTarget.current);
+      }
+    };
+  }, [observerTarget.current, infiniteScroll, hasMore, loading, onLoadMore]);
 
   return (
     <div className="w-full space-y-4">
@@ -47,8 +116,8 @@ export function DataTable({ columns, data, hideCount = false }) {
           <div className="flex items-center gap-2 bg-zinc-50 dark:bg-zinc-800/50 px-4 py-2 rounded-xl border border-zinc-200 dark:border-zinc-800">
             <span className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Records:</span>
             <span className="text-sm font-bold text-zinc-900 dark:text-zinc-100">
-              {table.getFilteredRowModel().rows.length}
-              {table.getFilteredRowModel().rows.length !== data.length && ` / ${data.length}`}
+              {serverSide ? totalCount : table.getFilteredRowModel().rows.length}
+              {!serverSide && table.getFilteredRowModel().rows.length !== data.length && ` / ${data.length}`}
             </span>
           </div>
         )}
@@ -62,11 +131,11 @@ export function DataTable({ columns, data, hideCount = false }) {
                 {headerGroup.headers.map((header) => (
                   <th key={header.id} className="px-6 py-4 border-b border-zinc-200 dark:border-zinc-800">
                     {header.isPlaceholder
-                      ? null
-                      : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )}
+                       ? null
+                       : flexRender(
+                           header.column.columnDef.header,
+                           header.getContext()
+                         )}
                   </th>
                 ))}
               </tr>
@@ -92,78 +161,93 @@ export function DataTable({ columns, data, hideCount = false }) {
             )}
           </tbody>
         </table>
-      </div>
-      
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-2 py-4">
-        <div className="flex items-center gap-6">
-          <div className="text-sm text-zinc-500 whitespace-nowrap">
-            Page {table.getState().pagination.pageIndex + 1} of{" "}
-            {table.getPageCount()}
+        {infiniteScroll && hasMore && (
+          <div ref={observerTarget} className="flex justify-center p-4">
+            {loading ? (
+              <Loader2 className="animate-spin text-zinc-400" size={24} />
+            ) : (
+              <div className="h-4" />
+            )}
           </div>
-          
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-zinc-500 whitespace-nowrap">Go to page:</span>
-            <input
-              type="number"
-              defaultValue={table.getState().pagination.pageIndex + 1}
+        )}
+        {infiniteScroll && !hasMore && data.length > 0 && (
+          <div className="text-center p-4 text-zinc-500 text-sm">
+            No data available
+          </div>
+        )}
+      </div>
+      {!infiniteScroll && (
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-2 py-4">
+          <div className="flex items-center gap-6">
+            <div className="text-sm text-zinc-500 whitespace-nowrap">
+              Page {table.getState().pagination.pageIndex + 1} of{" "}
+              {table.getPageCount()}
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-zinc-500 whitespace-nowrap">Go to page:</span>
+              <input
+                type="number"
+                value={table.getState().pagination.pageIndex + 1}
+                onChange={e => {
+                  const page = e.target.value ? Number(e.target.value) - 1 : 0
+                  table.setPageIndex(page)
+                }}
+                className="border border-zinc-200 dark:border-zinc-800 bg-transparent rounded px-2 py-1 text-sm w-16 focus:outline-none focus:ring-1 focus:ring-zinc-400"
+              />
+            </div>
+
+            <select
+              value={table.getState().pagination.pageSize}
               onChange={e => {
-                const page = e.target.value ? Number(e.target.value) - 1 : 0
-                table.setPageIndex(page)
+                table.setPageSize(Number(e.target.value))
               }}
-              className="border border-zinc-200 dark:border-zinc-800 bg-transparent rounded px-2 py-1 text-sm w-16 focus:outline-none focus:ring-1 focus:ring-zinc-400"
-            />
+              className="border border-zinc-200 dark:border-zinc-800 bg-transparent rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-zinc-400"
+            >
+              {[10, 20, 30, 40, 50].map(pageSize => (
+                <option key={pageSize} value={pageSize} className="bg-white dark:bg-zinc-900">
+                  Show {pageSize}
+                </option>
+              ))}
+            </select>
           </div>
 
-          <select
-            value={table.getState().pagination.pageSize}
-            onChange={e => {
-              table.setPageSize(Number(e.target.value))
-            }}
-            className="border border-zinc-200 dark:border-zinc-800 bg-transparent rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-zinc-400"
-          >
-            {[10, 20, 30, 40, 50].map(pageSize => (
-              <option key={pageSize} value={pageSize} className="bg-white dark:bg-zinc-900">
-                Show {pageSize}
-              </option>
-            ))}
-          </select>
+          <div className="flex items-center gap-2">
+            <button
+              className="p-2 rounded-lg border border-zinc-200 dark:border-zinc-800 disabled:opacity-50 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
+              onClick={() => table.setPageIndex(0)}
+              disabled={!table.getCanPreviousPage()}
+              title="First Page"
+            >
+              <ChevronsLeft size={18} />
+            </button>
+            <button
+              className="p-2 rounded-lg border border-zinc-200 dark:border-zinc-800 disabled:opacity-50 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
+              onClick={() => table.previousPage()}
+              disabled={!table.getCanPreviousPage()}
+              title="Previous Page"
+            >
+              <ChevronLeft size={18} />
+            </button>
+            <button
+              className="p-2 rounded-lg border border-zinc-200 dark:border-zinc-800 disabled:opacity-50 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
+              onClick={() => table.nextPage()}
+              disabled={!table.getCanNextPage()}
+              title="Next Page"
+            >
+              <ChevronRight size={18} />
+            </button>
+            <button
+              className="p-2 rounded-lg border border-zinc-200 dark:border-zinc-800 disabled:opacity-50 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
+              onClick={() => table.setPageIndex(table.getPageCount() - 1)}
+              disabled={!table.getCanNextPage()}
+              title="Last Page"
+            >
+              <ChevronsRight size={18} />
+            </button>
+          </div>
         </div>
-
-        <div className="flex items-center gap-2">
-          <button
-            className="p-2 rounded-lg border border-zinc-200 dark:border-zinc-800 disabled:opacity-50 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
-            onClick={() => table.setPageIndex(0)}
-            disabled={!table.getCanPreviousPage()}
-            title="First Page"
-          >
-            <ChevronsLeft size={18} />
-          </button>
-          <button
-            className="p-2 rounded-lg border border-zinc-200 dark:border-zinc-800 disabled:opacity-50 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
-            title="Previous Page"
-          >
-            <ChevronLeft size={18} />
-          </button>
-          <button
-            className="p-2 rounded-lg border border-zinc-200 dark:border-zinc-800 disabled:opacity-50 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
-            title="Next Page"
-          >
-            <ChevronRight size={18} />
-          </button>
-          <button
-            className="p-2 rounded-lg border border-zinc-200 dark:border-zinc-800 disabled:opacity-50 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
-            onClick={() => table.setPageIndex(table.getPageCount() - 1)}
-            disabled={!table.getCanNextPage()}
-            title="Last Page"
-          >
-            <ChevronsRight size={18} />
-          </button>
-        </div>
-      </div>
+      )}
     </div>
   );
 }

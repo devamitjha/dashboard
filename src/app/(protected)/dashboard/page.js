@@ -153,16 +153,16 @@ export default function Dashboard() {
         
         // Fetch Today's Data
         const [cartsTodayRes, ordersTodayRes, wishlistsTodayRes, activityTodayRes] = await Promise.all([
-          fetch(`${baseUrl}/api/admin/carts?start_date=${today}&end_date=${today}&t=${Date.now()}`),
-          fetch(`${baseUrl}/api/admin/orders?start_date=${today}&end_date=${today}&t=${Date.now()}`),
+          fetch(`${baseUrl}/api/admin/carts?start_date=${today}&end_date=${today}&limit=1&t=${Date.now()}`),
+          fetch(`${baseUrl}/api/admin/orders?start_date=${today}&end_date=${today}&limit=1&t=${Date.now()}`),
           fetch(`${baseUrl}/api/admin/wishlists?start_date=${today}&end_date=${today}&t=${Date.now()}`),
           fetch(`${baseUrl}/api/admin/tracking?start_date=${today}&end_date=${today}&t=${Date.now()}`)
         ]);
 
         // Fetch Total Data (No date filter)
         const [cartsTotalRes, ordersTotalRes, wishlistsTotalRes, activityTotalRes] = await Promise.all([
-          fetch(`${baseUrl}/api/admin/carts?t=${Date.now()}`),
-          fetch(`${baseUrl}/api/admin/orders?t=${Date.now()}`),
+          fetch(`${baseUrl}/api/admin/carts?limit=1&t=${Date.now()}`),
+          fetch(`${baseUrl}/api/admin/orders?limit=1&t=${Date.now()}`),
           fetch(`${baseUrl}/api/admin/wishlists?t=${Date.now()}`),
           fetch(`${baseUrl}/api/admin/tracking?t=${Date.now()}`)
         ]);
@@ -177,12 +177,12 @@ export default function Dashboard() {
 
         setCounts({
           carts: {
-            today: cartsToday.success ? cartsToday.data.length : 0,
-            total: cartsTotal.success ? cartsTotal.data.length : 0
+            today: cartsToday.success ? (cartsToday.total !== undefined ? cartsToday.total : cartsToday.data.length) : 0,
+            total: cartsTotal.success ? (cartsTotal.total !== undefined ? cartsTotal.total : cartsTotal.data.length) : 0
           },
           orders: {
-            today: ordersToday.success ? ordersToday.data.length : 0,
-            total: ordersTotal.success ? ordersTotal.data.length : 0
+            today: ordersToday.success ? (ordersToday.totalCount !== undefined ? ordersToday.totalCount : ordersToday.data.length) : 0,
+            total: ordersTotal.success ? (ordersTotal.totalCount !== undefined ? ordersTotal.totalCount : ordersTotal.data.length) : 0
           },
           wishlists: {
             today: wishlistsToday.success ? wishlistsToday.data.length : 0,
