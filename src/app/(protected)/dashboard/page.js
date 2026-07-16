@@ -69,6 +69,13 @@ const DASHBOARD_ITEMS = [
     color: "bg-amber-50 text-amber-600 border-amber-100"
   },
   {
+    title: "Bank Discount",
+    description: "Manage the instant bank discount on diamond value.",
+    href: "/dashboard/bank-discount",
+    icon: CreditCard,
+    color: "bg-blue-50 text-blue-600 border-blue-100"
+  },
+  {
     title: "Topbar Offers",
     description: "Update announcements and promotional messages in the header.",
     href: "/dashboard/topbar-offers",

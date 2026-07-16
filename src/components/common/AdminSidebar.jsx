@@ -29,6 +29,7 @@ const MENU_ITEMS = [
   { title: 'Abandoned Carts', icon: ShoppingCart, href: '/dashboard/carts' },
   { title: 'User Wishlists', icon: Heart, href: '/dashboard/wishlists' },
   { title: 'Gold Coin', icon: Coins, href: '/dashboard/gold-coin-offer' },
+  { title: 'Bank Discount', icon: CreditCard, href: '/dashboard/bank-discount' },
   { title: 'Topbar Offers', icon: Bell, href: '/dashboard/topbar-offers' },
   { title: 'Pincodes', icon: MapPin, href: '/dashboard/pincodes' },
   { title: 'Stores', icon: Store, href: '/dashboard/stores' },
