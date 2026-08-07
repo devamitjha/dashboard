@@ -114,9 +114,17 @@ export default function AbandonedCartsPage() {
                 <div className="flex items-center gap-2 font-black text-zinc-900 text-sm tracking-tight">
                   <User size={14} className="text-[#5A413F]" />
                   {customer.firstName} {customer.lastName}
+                  {customer.isNitroIdentified && (
+                    <Badge className="bg-purple-100 text-purple-700 border-purple-200 text-[9px] px-1.5 py-0 shadow-sm ml-1">
+                      Nitro Identified
+                    </Badge>
+                  )}
                 </div>
                 <div className="text-[10px] text-zinc-500 truncate max-w-[180px] font-medium">{customer.email}</div>
-                <div className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider">{customer.phone}</div>
+                <div className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider">
+                  {customer.phone}
+                  {customer.pincode && <span className="ml-2 px-1 py-0.5 bg-zinc-100 rounded text-zinc-500 font-medium">PIN: {customer.pincode}</span>}
+                </div>
               </>
             ) : (
               <div className="flex flex-col gap-1">
