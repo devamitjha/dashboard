@@ -17,6 +17,7 @@ const getPageType = (path) => {
   if (path.includes('/pages/')) return 'Information Page';
   if (path.includes('/search')) return 'Search Page';
   if (path.includes('/checkout')) return 'Checkout Page';
+  if (path.includes('/admin')) return 'My Account Page';
   return 'Other Page';
 };
 
@@ -257,6 +258,7 @@ export default function UserTrackingPage() {
                 <option value="Information Page">Information Page</option>
                 <option value="Search Page">Search Page</option>
                 <option value="Checkout Page">Checkout Page</option>
+                <option value="My Account Page">My Account Page</option>
                 <option value="Other Page">Other Page</option>
               </select>
             </div>
