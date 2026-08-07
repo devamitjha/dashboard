@@ -6,11 +6,26 @@ import { DataTable } from '../../../../components/ui/DataTable';
 import { Badge } from '../../../../components/ui/badge';
 import { format, startOfDay, endOfDay } from 'date-fns';
 
+const getPageType = (path) => {
+  if (!path || path === 'unknown') return 'Unknown Source';
+  if (path === '/' || path === '') return 'Homepage';
+  if (path.includes('/collections/')) return 'Collection Page';
+  if (path.includes('/products/')) return 'Product Page';
+  if (path.includes('/cart')) return 'Cart Page';
+  if (path.includes('/login')) return 'Login Page';
+  if (path.includes('/register')) return 'Register Page';
+  if (path.includes('/pages/')) return 'Information Page';
+  if (path.includes('/search')) return 'Search Page';
+  if (path.includes('/checkout')) return 'Checkout Page';
+  return 'Other Page';
+};
+
 export default function UserTrackingPage() {
   const [trackingData, setTrackingData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [dataSource, setDataSource] = useState('UAT');
   const [activityType, setActivityType] = useState('ALL');
+  const [locationFilter, setLocationFilter] = useState('ALL');
   const [startDate, setStartDate] = useState(format(new Date(), 'yyyy-MM-dd'));
   const [endDate, setEndDate] = useState(format(new Date(), 'yyyy-MM-dd'));
 
@@ -151,10 +166,16 @@ export default function UserTrackingPage() {
       cell: ({ row }) => {
         const page = row.original.sourcePage || 'unknown';
         const cleanPage = page.replace(/^https?:\/\/[^\/]+/, '') || '/';
+
+        const pageType = getPageType(cleanPage);
+
         return (
           <div className="flex flex-col gap-1 max-w-[250px]">
-            <div className="flex items-center gap-1.5 text-xs text-zinc-600 font-medium">
-              <Globe size={12} className="text-zinc-400" />
+            <div className="flex items-center gap-1.5 text-xs text-zinc-900 font-bold">
+              <Globe size={12} className="text-[#5A413F]" />
+              <span>{pageType}</span>
+            </div>
+            <div className="flex items-center gap-1.5 text-[10px] text-zinc-500 font-medium">
               <span className="truncate" title={page}>{cleanPage}</span>
             </div>
             <span className="text-[9px] text-zinc-300 font-mono tracking-tighter">IP: {row.original.ip || '0.0.0.0'}</span>
@@ -187,14 +208,6 @@ export default function UserTrackingPage() {
           </div>
         );
       }
-    },
-    {
-      header: 'Action',
-      cell: ({ row }) => (
-        <button className="p-2 hover:bg-zinc-100 rounded-lg text-zinc-400 hover:text-zinc-900 transition-colors">
-          <ExternalLink size={16} />
-        </button>
-      )
     }
   ];
 
@@ -222,6 +235,29 @@ export default function UserTrackingPage() {
                 <option value="REGISTER">Registrations</option>
                 <option value="ADD_TO_CART">Add to Cart</option>
                 <option value="LOGOUT">Logouts</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-xl border border-zinc-100 shadow-sm">
+            <div className="flex flex-col">
+              <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Location / Page</span>
+              <select 
+                value={locationFilter} 
+                onChange={(e) => setLocationFilter(e.target.value)}
+                className="text-xs font-bold bg-transparent outline-none cursor-pointer max-w-[120px]"
+              >
+                <option value="ALL">All Pages</option>
+                <option value="Homepage">Homepage</option>
+                <option value="Collection Page">Collection Page</option>
+                <option value="Product Page">Product Page</option>
+                <option value="Cart Page">Cart Page</option>
+                <option value="Login Page">Login Page</option>
+                <option value="Register Page">Register Page</option>
+                <option value="Information Page">Information Page</option>
+                <option value="Search Page">Search Page</option>
+                <option value="Checkout Page">Checkout Page</option>
+                <option value="Other Page">Other Page</option>
               </select>
             </div>
           </div>
@@ -265,7 +301,14 @@ export default function UserTrackingPage() {
         </div>
       ) : (
         <div className="bg-white rounded-2xl border border-zinc-100 shadow-xl overflow-hidden p-6">
-            <DataTable columns={columns} data={trackingData} />
+            <DataTable 
+              columns={activityType === 'ADD_TO_CART' ? columns.filter(col => col.header !== 'Location / Page') : columns} 
+              data={trackingData.filter(item => {
+                if (locationFilter === 'ALL') return true;
+                const cleanPage = (item.sourcePage || 'unknown').replace(/^https?:\/\/[^\/]+/, '') || '/';
+                return getPageType(cleanPage) === locationFilter;
+              })} 
+            />
         </div>
       )}
     </div>
