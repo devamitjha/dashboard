@@ -304,7 +304,7 @@ export default function UserTrackingPage() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {Object.entries(
               trackingData.reduce((acc, item) => {
-                const inHouseIPs = ['106.201.243.160', '106.201.243.156', '122.179.139.168', '122.179.140.17', '103.88.221.55'];
+                const inHouseIPs = ['106.201.243.160', '106.201.243.156', '122.179.139.168', '122.179.140.17', '103.88.221.55', '45.250.47.102'];
                 const isInternal = inHouseIPs.includes(item.ip);
                 
                 if (!acc[item.type]) acc[item.type] = { total: 0, internal: 0, external: 0 };
