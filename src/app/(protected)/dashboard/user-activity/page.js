@@ -300,15 +300,82 @@ export default function UserTrackingPage() {
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#5A413F]"></div>
         </div>
       ) : (
-        <div className="bg-white rounded-2xl border border-zinc-100 shadow-xl overflow-hidden p-6">
-            <DataTable 
-              columns={activityType === 'ADD_TO_CART' ? columns.filter(col => col.header !== 'Location / Page') : columns} 
-              data={trackingData.filter(item => {
-                if (locationFilter === 'ALL') return true;
-                const cleanPage = (item.sourcePage || 'unknown').replace(/^https?:\/\/[^\/]+/, '') || '/';
-                return getPageType(cleanPage) === locationFilter;
-              })} 
-            />
+        <div className="flex flex-col gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {Object.entries(
+              trackingData.reduce((acc, item) => {
+                const inHouseIPs = ['106.201.243.160', '106.201.243.156', '122.179.139.168', '122.179.140.17', '103.88.221.55'];
+                const isInternal = inHouseIPs.includes(item.ip);
+                
+                if (!acc[item.type]) acc[item.type] = { total: 0, internal: 0, external: 0 };
+                acc[item.type].total++;
+                if (isInternal) acc[item.type].internal++;
+                else acc[item.type].external++;
+                return acc;
+              }, {})
+            ).sort((a, b) => b[1].total - a[1].total).map(([key, data]) => {
+              let value = data.total;
+              let color = 'bg-zinc-50 border-zinc-100 text-zinc-900';
+              let iconColor = 'text-zinc-400';
+              let dividerColor = 'bg-zinc-200';
+              let Icon = Globe;
+
+              if (key === 'LOGIN') {
+                color = 'bg-emerald-50 border-emerald-100 text-emerald-900';
+                iconColor = 'text-emerald-500';
+                dividerColor = 'bg-emerald-200';
+                Icon = LogIn;
+              } else if (key === 'REGISTER') {
+                color = 'bg-blue-50 border-blue-100 text-blue-900';
+                iconColor = 'text-blue-500';
+                dividerColor = 'bg-blue-200';
+                Icon = UserPlus;
+              } else if (key === 'LOGOUT') {
+                color = 'bg-rose-50 border-rose-100 text-rose-900';
+                iconColor = 'text-rose-500';
+                dividerColor = 'bg-rose-200';
+                Icon = LogOut;
+              } else if (key === 'ADD_TO_CART') {
+                color = 'bg-amber-50 border-amber-100 text-amber-900';
+                iconColor = 'text-amber-500';
+                dividerColor = 'bg-amber-200';
+                Icon = ShoppingCart;
+              }
+
+              return (
+                <div key={key} className={`${color} p-5 rounded-2xl border shadow-sm flex flex-col gap-2 relative overflow-hidden transition-transform hover:scale-[1.02]`}>
+                  <div className="flex justify-between items-start z-10">
+                    <span className="text-[10px] font-black uppercase tracking-widest opacity-70">{key.replace(/_/g, ' ')}</span>
+                    <Icon size={16} className={iconColor} />
+                  </div>
+                  <span className="text-3xl font-black z-10">{value}</span>
+                  <div className="flex items-center gap-3 z-10 mt-1">
+                     <div className="flex flex-col">
+                        <span className="text-[9px] uppercase tracking-widest font-black opacity-60">External</span>
+                        <span className="text-xs font-bold">{data.external}</span>
+                     </div>
+                     <div className={`h-4 w-px ${dividerColor}`} />
+                     <div className="flex flex-col">
+                        <span className="text-[9px] uppercase tracking-widest font-black opacity-60">In-House</span>
+                        <span className="text-xs font-bold">{data.internal}</span>
+                     </div>
+                  </div>
+                  <Icon size={80} className={`absolute -bottom-4 -right-4 opacity-5 ${iconColor}`} />
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="bg-white rounded-2xl border border-zinc-100 shadow-xl overflow-hidden p-6">
+              <DataTable 
+                columns={activityType === 'ADD_TO_CART' ? columns.filter(col => col.header !== 'Location / Page') : columns} 
+                data={trackingData.filter(item => {
+                  if (locationFilter === 'ALL') return true;
+                  const cleanPage = (item.sourcePage || 'unknown').replace(/^https?:\/\/[^\/]+/, '') || '/';
+                  return getPageType(cleanPage) === locationFilter;
+                })} 
+              />
+          </div>
         </div>
       )}
     </div>

@@ -15,6 +15,7 @@ export default function AbandonedCartsPage() {
   const [pageIndex, setPageIndex] = useState(0);
   const [pageSize, setPageSize] = useState(20);
   const [totalCarts, setTotalCarts] = useState(0);
+  const [stats, setStats] = useState({ uniqueUsers: 0, totalItems: 0 });
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   // Export Modal State
@@ -39,6 +40,7 @@ export default function AbandonedCartsPage() {
         if (data.success) {
           setCarts(prev => pageIndex === 0 ? data.data : [...prev, ...data.data]);
           setTotalCarts(data.total || 0);
+          setStats(data.stats || { uniqueUsers: 0, totalItems: 0 });
         }
       } catch (err) {
         console.error('Failed to fetch carts:', err);
@@ -208,7 +210,14 @@ export default function AbandonedCartsPage() {
                 </div>
                 <div className="flex flex-col">
                   <span className="font-medium line-clamp-1 max-w-[200px]">{item.title}</span>
-                  <span className="text-[10px] text-zinc-500">Qty: {item.quantity} • ₹{item.price?.toLocaleString()}</span>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <span className="text-[10px] text-zinc-500">Qty: {item.quantity} • ₹{item.price?.toLocaleString()}</span>
+                    {item.addedAt && (
+                      <Badge className="bg-emerald-50 text-emerald-600 border-emerald-100 text-[8px] font-black tracking-widest px-1 py-0 uppercase shadow-sm">
+                        {format(new Date(item.addedAt), 'MMM dd, yyyy')}
+                      </Badge>
+                    )}
+                  </div>
                 </div>
               </div>
             ))}
@@ -256,13 +265,7 @@ export default function AbandonedCartsPage() {
         </div>
         
         <div className="flex items-center gap-4">
-          <button
-            onClick={handleOpenExportModal}
-            className="flex items-center gap-2 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 px-4 py-2 rounded-xl border border-emerald-200 shadow-sm transition-colors"
-          >
-            <Download size={16} />
-            <span className="text-xs font-black uppercase tracking-widest">Export Excel</span>
-          </button>
+
           <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-xl border border-zinc-100 shadow-sm">
             <div className="flex flex-col">
               <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Customer Details</span>
@@ -301,23 +304,83 @@ export default function AbandonedCartsPage() {
             </div>
           </div>
 
-          <div className="flex items-center gap-4 bg-white p-2 rounded-2xl border border-zinc-100 shadow-sm">
-              <button 
-                onClick={() => setRefreshTrigger(prev => prev + 1)}
-                className="px-4 py-2 border-r border-zinc-100 text-center hover:bg-zinc-50 rounded-l-xl transition-colors flex flex-col items-center justify-center cursor-pointer"
-              >
-                  <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest flex items-center gap-1.5 justify-center">
-                    <span className="size-1.5 rounded-full bg-blue-500 animate-pulse" />
-                    Manual Refresh
-                  </p>
-                  <p className="text-[10px] font-bold text-[#5A413F] underline">Click to Reload</p>
-              </button>
-              <div className="px-4 py-2 text-center">
-                  <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Total Carts</p>
-                  <p className="text-xl font-black text-zinc-900">{totalCarts}</p>
-              </div>
-          </div>
+
         </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="bg-amber-50 p-5 rounded-2xl border border-amber-100 shadow-sm flex flex-col gap-2 relative overflow-hidden">
+          <div className="flex justify-between items-start z-10">
+            <span className="text-[10px] font-black uppercase tracking-widest text-amber-700">Unique Users Added Items</span>
+            <User size={16} className="text-amber-500" />
+          </div>
+          <span className="text-3xl font-black text-amber-900 z-10">{stats.uniqueUsers || 0}</span>
+          <div className="flex items-center gap-3 z-10 mt-1">
+             <div className="flex flex-col">
+                <span className="text-[9px] uppercase tracking-widest font-black opacity-60 text-amber-800">External</span>
+                <span className="text-xs font-bold text-amber-900">{stats.externalUsers || 0}</span>
+             </div>
+             <div className="h-4 w-px bg-amber-200" />
+             <div className="flex flex-col">
+                <span className="text-[9px] uppercase tracking-widest font-black opacity-60 text-amber-800">In-House</span>
+                <span className="text-xs font-bold text-amber-900">{stats.inHouseUsers || 0}</span>
+             </div>
+          </div>
+          <User size={80} className="absolute -bottom-4 -right-4 opacity-5 text-amber-500" />
+        </div>
+        <div className="bg-emerald-50 p-5 rounded-2xl border border-emerald-100 shadow-sm flex flex-col gap-2 relative overflow-hidden">
+          <div className="flex justify-between items-start z-10">
+            <span className="text-[10px] font-black uppercase tracking-widest text-emerald-700">Total Items Added</span>
+            <Package size={16} className="text-emerald-500" />
+          </div>
+          <span className="text-3xl font-black text-emerald-900 z-10">{stats.totalItems || 0}</span>
+          <div className="flex items-center gap-3 z-10 mt-1">
+             <div className="flex flex-col">
+                <span className="text-[9px] uppercase tracking-widest font-black opacity-60 text-emerald-800">External</span>
+                <span className="text-xs font-bold text-emerald-900">{stats.externalItems || 0}</span>
+             </div>
+             <div className="h-4 w-px bg-emerald-200" />
+             <div className="flex flex-col">
+                <span className="text-[9px] uppercase tracking-widest font-black opacity-60 text-emerald-800">In-House</span>
+                <span className="text-xs font-bold text-emerald-900">{stats.inHouseItems || 0}</span>
+             </div>
+          </div>
+          <Package size={80} className="absolute -bottom-4 -right-4 opacity-5 text-emerald-500" />
+        </div>
+
+        <div className="bg-white p-5 rounded-2xl border border-zinc-100 shadow-sm flex flex-col gap-2 relative overflow-hidden">
+          <div className="flex justify-between items-start z-10">
+            <span className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Total Carts</span>
+            <button 
+              onClick={() => setRefreshTrigger(prev => prev + 1)}
+              className="flex items-center gap-1 cursor-pointer hover:opacity-70 transition-opacity bg-zinc-50 px-2 py-1 rounded-md"
+            >
+              <span className="size-1.5 rounded-full bg-blue-500 animate-pulse" />
+              <span className="text-[8px] font-black uppercase tracking-widest text-zinc-500">Refresh</span>
+            </button>
+          </div>
+          <span className="text-3xl font-black text-zinc-900 z-10">{totalCarts}</span>
+          <div className="flex items-center gap-3 z-10 mt-1">
+             <div className="flex flex-col">
+                <span className="text-[9px] uppercase tracking-widest font-black opacity-60 text-zinc-500">External</span>
+                <span className="text-xs font-bold text-zinc-700">{stats.externalCarts || 0}</span>
+             </div>
+             <div className="h-4 w-px bg-zinc-200" />
+             <div className="flex flex-col">
+                <span className="text-[9px] uppercase tracking-widest font-black opacity-60 text-zinc-500">In-House</span>
+                <span className="text-xs font-bold text-zinc-700">{stats.inHouseCarts || 0}</span>
+             </div>
+          </div>
+          <ShoppingCart size={80} className="absolute -bottom-4 -right-4 opacity-[0.03] text-zinc-900" />
+        </div>
+
+        <button
+          onClick={handleOpenExportModal}
+          className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 p-5 rounded-2xl border border-emerald-700 shadow-sm flex flex-col items-center justify-center gap-2 transition-colors cursor-pointer"
+        >
+          <Download size={20} />
+          <span className="text-[10px] font-black uppercase tracking-widest">Export Excel</span>
+        </button>
       </div>
 
       {loading && pageIndex === 0 ? (
